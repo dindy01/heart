@@ -47,16 +47,22 @@ export default function TextHeart() {
     let sparkles: Sparkle[] = [];
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       initPoints();
     };
 
     const initPoints = () => {
       points = [];
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const scale = Math.min(canvas.width, canvas.height) / 45;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const scale = Math.min(width, height) / 45;
 
       // Heart equation: 
       // x = 16 sin^3(t)
@@ -97,12 +103,15 @@ export default function TextHeart() {
       if (!start) start = time;
       const elapsed = time - start;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      ctx.clearRect(0, 0, width, height);
       ctx.font = `${fontSize}px "Fira Code", monospace`;
       
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const scale = Math.min(canvas.width, canvas.height) / 45;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const scale = Math.min(width, height) / 45;
 
       // Draw the glowing text heart
       ctx.shadowColor = 'rgba(255, 77, 109, 0.8)';
@@ -149,7 +158,7 @@ export default function TextHeart() {
             vx: (Math.random() - 0.5) * 0.4,
             vy: -Math.random() * 0.6 - 0.2, // slow drift upwards
             alpha: 0.8 + Math.random() * 0.2,
-            size: Math.random() * 2.8 + 1.2, // slightly larger so shape is visible
+            size: Math.random() * 4.0 + 2.5, // size range from 2.5 to 6.5px to make shape clearly visible
             decay: Math.random() * 0.004 + 0.002, // slower decay for longer life
             color: colorPrefix,
             rotation: Math.random() * Math.PI * 2,

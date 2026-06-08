@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Terminal, Lock, Heart as HeartIcon, Sparkles } from 'lucide-react';
 import TextHeart from './components/TextHeart';
@@ -27,28 +27,37 @@ const Typewriter = ({ text, delay = 50, onComplete }: { text: string, delay?: nu
 export default function App() {
   const [stage, setStage] = useState<'console' | 'reveal'>('console');
   const [consoleFinished, setConsoleFinished] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    let audio: HTMLAudioElement | null = null;
-    if (stage === 'reveal') {
-      audio = new Audio(angelAudio);
+  // Play audio helper - triggered synchronously inside the user click event handler
+  const playMusic = useCallback(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(angelAudio);
       audio.loop = true;
       audio.volume = 0.8;
-      audio.play().catch(err => console.log("Audio play blocked/failed:", err));
+      audio.play().catch(err => {
+        console.warn("Audio play blocked by browser. Retrying on next interaction.", err);
+      });
+      audioRef.current = audio;
     }
+  }, []);
+
+  // Ensure audio is stopped on component unmount
+  useEffect(() => {
     return () => {
-      if (audio) {
-        audio.pause();
-        audio = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
-  }, [stage]);
+  }, []);
 
   const handleReveal = useCallback(() => {
     if (stage === 'console' && consoleFinished) {
+      playMusic();
       setStage('reveal');
     }
-  }, [stage, consoleFinished]);
+  }, [stage, consoleFinished, playMusic]);
 
   return (
     <div 
@@ -103,6 +112,7 @@ export default function App() {
                     id="decrypt-button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      playMusic();
                       setStage('reveal');
                     }}
                     className="group flex items-center gap-3 px-6 py-3 border border-pink-deep/30 bg-pink-deep/5 hover:bg-pink-deep/10 text-pink-soft transition-all duration-300 pointer-events-auto"

@@ -111,9 +111,9 @@ export default function TextHeart() {
       // Floating Sparkles Effect (Option 3)
       // Spawn new sparkles from revealed points
       const revealedPoints = points.filter(p => elapsed > p.delay && p.alpha > 0.15);
-      if (revealedPoints.length > 0 && sparkles.length < 120 && Math.random() < 0.25) {
-        // Spawn 1-2 sparkles
-        const numToSpawn = Math.random() < 0.5 ? 1 : 2;
+      if (revealedPoints.length > 0 && sparkles.length < 350 && Math.random() < 0.6) {
+        // Spawn 2-4 sparkles
+        const numToSpawn = Math.floor(Math.random() * 3) + 2;
         for (let k = 0; k < numToSpawn; k++) {
           const parentPoint = revealedPoints[Math.floor(Math.random() * revealedPoints.length)];
           const textWidth = ctx.measureText(text).width;
@@ -134,11 +134,11 @@ export default function TextHeart() {
           sparkles.push({
             x: parentPoint.x + offsetX,
             y: parentPoint.y + offsetY,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: -Math.random() * 0.5 - 0.2, // slow drift upwards
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: -Math.random() * 0.6 - 0.2, // slow drift upwards
             alpha: 0.8 + Math.random() * 0.2,
-            size: Math.random() * 2 + 0.8, // size range from 0.8 to 2.8px
-            decay: Math.random() * 0.005 + 0.004,
+            size: Math.random() * 2.2 + 0.6, // size range from 0.6 to 2.8px
+            decay: Math.random() * 0.004 + 0.002, // slower decay for longer life
             color: colorPrefix
           });
         }

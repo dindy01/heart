@@ -143,12 +143,12 @@ export default function TextHeart() {
           const offsetX = (Math.random() - 0.5) * textWidth;
           const offsetY = (Math.random() - 0.5) * fontSize;
           
-          // Vary the color (pinkish to warm gold/white)
+          // Lighter variations of the main heart color (rgb(255, 77, 109))
           const colors = [
-            'rgba(255, 120, 150, ', // Pink
-            'rgba(255, 200, 220, ', // Light Pink/White
-            'rgba(255, 255, 255, ', // White
-            'rgba(255, 180, 100, ', // Warm Gold/Orange
+            'rgba(255, 115, 140, ', // ~72% lightness
+            'rgba(255, 135, 155, ', // ~77% lightness
+            'rgba(255, 155, 175, ', // ~82% lightness
+            'rgba(255, 180, 195, ', // ~88% lightness
           ];
           const colorPrefix = colors[Math.floor(Math.random() * colors.length)];
 

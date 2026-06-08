@@ -8,6 +8,17 @@ interface Point {
   delay: number;
 }
 
+interface Sparkle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  alpha: number;
+  size: number;
+  decay: number;
+  color: string;
+}
+
 export default function TextHeart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -21,7 +32,7 @@ export default function TextHeart() {
     let points: Point[] = [];
     const text = "i love you";
     const fontSize = 14;
-    let glowAngle = 0;
+    let sparkles: Sparkle[] = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -94,40 +105,64 @@ export default function TextHeart() {
         ctx.fillText(text, p.x - ctx.measureText(text).width / 2, p.y);
       });
 
-      // Reset shadow for the orb drawing
+      // Reset shadow for sparkle drawing
       ctx.shadowBlur = 0;
 
-      // Draw traveling glowing effect around the text outline
-      if (elapsed > 1000) {
-        glowAngle += 0.012; // slow orbit speed
-        if (glowAngle > Math.PI * 2) {
-          glowAngle = 0;
-        }
+      // Floating Sparkles Effect (Option 3)
+      // Spawn new sparkles from revealed points
+      const revealedPoints = points.filter(p => elapsed > p.delay && p.alpha > 0.15);
+      if (revealedPoints.length > 0 && sparkles.length < 120 && Math.random() < 0.25) {
+        // Spawn 1-2 sparkles
+        const numToSpawn = Math.random() < 0.5 ? 1 : 2;
+        for (let k = 0; k < numToSpawn; k++) {
+          const parentPoint = revealedPoints[Math.floor(Math.random() * revealedPoints.length)];
+          const textWidth = ctx.measureText(text).width;
+          
+          // Spread spawn positions slightly across the text width/height
+          const offsetX = (Math.random() - 0.5) * textWidth;
+          const offsetY = (Math.random() - 0.5) * fontSize;
+          
+          // Vary the color (pinkish to warm gold/white)
+          const colors = [
+            'rgba(255, 120, 150, ', // Pink
+            'rgba(255, 200, 220, ', // Light Pink/White
+            'rgba(255, 255, 255, ', // White
+            'rgba(255, 180, 100, ', // Warm Gold/Orange
+          ];
+          const colorPrefix = colors[Math.floor(Math.random() * colors.length)];
 
-        // Draw traveling orb with trail (e.g. 10 particles of descending sizes/opacities)
-        for (let i = 0; i < 10; i++) {
-          const trailAngle = glowAngle - (i * 0.06);
-          const gx = 16 * Math.pow(Math.sin(trailAngle), 3);
-          const gy = -(13 * Math.cos(trailAngle) - 5 * Math.cos(2*trailAngle) - 2 * Math.cos(3*trailAngle) - Math.cos(4*trailAngle));
-          const px = centerX + gx * scale;
-          const py = centerY + gy * scale;
-
-          const trailAlpha = (1 - (i / 10)) * Math.min(1, (elapsed - 1000) / 2000);
-          const size = 35 - (i * 3);
-          if (size <= 0) continue;
-
-          const gradient = ctx.createRadialGradient(px, py, 0, px, py, size);
-          gradient.addColorStop(0, `rgba(255, 255, 255, ${trailAlpha * 0.9})`);
-          gradient.addColorStop(0.2, `rgba(255, 77, 109, ${trailAlpha * 0.7})`);
-          gradient.addColorStop(0.6, `rgba(255, 77, 109, ${trailAlpha * 0.2})`);
-          gradient.addColorStop(1, 'rgba(255, 77, 109, 0)');
-
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(px, py, size, 0, Math.PI * 2);
-          ctx.fill();
+          sparkles.push({
+            x: parentPoint.x + offsetX,
+            y: parentPoint.y + offsetY,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: -Math.random() * 0.5 - 0.2, // slow drift upwards
+            alpha: 0.8 + Math.random() * 0.2,
+            size: Math.random() * 2 + 0.8, // size range from 0.8 to 2.8px
+            decay: Math.random() * 0.005 + 0.004,
+            color: colorPrefix
+          });
         }
       }
+
+      // Update and draw sparkles
+      sparkles = sparkles.filter(s => {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.alpha -= s.decay;
+
+        if (s.alpha <= 0) {
+          return false;
+        }
+
+        // Slight horizontal swaying motion using sine
+        s.vx += Math.sin(time * 0.01 + s.y) * 0.01;
+
+        ctx.fillStyle = `${s.color}${s.alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        return true;
+      });
 
       animationFrameId = requestAnimationFrame(draw);
     };

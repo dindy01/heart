@@ -27,6 +27,9 @@ const Typewriter = ({ text, delay = 50, onComplete }: { text: string, delay?: nu
 export default function App() {
   const [stage, setStage] = useState<'console' | 'reveal'>('console');
   const [consoleFinished, setConsoleFinished] = useState(false);
+  const [password, setPassword] = useState('');
+  const [promptFinished, setPromptFinished] = useState(false);
+  const [error, setError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Play audio helper - triggered synchronously inside the user click event handler
@@ -52,17 +55,18 @@ export default function App() {
     };
   }, []);
 
-  const handleReveal = useCallback(() => {
-    if (stage === 'console' && consoleFinished) {
+  const handleDecrypt = useCallback(() => {
+    if (password === '25') {
       playMusic();
       setStage('reveal');
+    } else {
+      setError(true);
     }
-  }, [stage, consoleFinished, playMusic]);
+  }, [password, playMusic]);
 
   return (
     <div 
-      onClick={handleReveal}
-      className={`relative min-h-screen w-full flex items-center justify-center bg-[#050505] selection:bg-pink-deep/30 ${stage === 'console' && consoleFinished ? 'cursor-pointer' : ''}`}
+      className="relative min-h-screen w-full flex items-center justify-center bg-[#050505] selection:bg-pink-deep/30"
     >
       <div className="scanline" />
       
@@ -102,29 +106,76 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="pt-8 flex flex-col items-start gap-6"
+                  className="pt-8 flex flex-col items-start gap-6 w-full"
                 >
                   <p className="text-white/40 italic">
                     {">"} One encrypted package found for you.
                   </p>
-                  
-                  <button
-                    id="decrypt-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playMusic();
-                      setStage('reveal');
-                    }}
-                    className="group flex items-center gap-3 px-6 py-3 border border-pink-deep/30 bg-pink-deep/5 hover:bg-pink-deep/10 text-pink-soft transition-all duration-300 pointer-events-auto"
-                  >
-                    <Lock size={16} className="group-hover:rotate-12 transition-transform" />
-                    <span className="font-mono tracking-widest uppercase text-xs">Decrypt Message</span>
-                    <span className="terminal-cursor" />
-                  </button>
-                  
-                  <p className="text-[10px] text-white/20 animate-pulse">
-                    (or just click anywhere)
-                  </p>
+
+                  <div className="flex flex-col gap-3 w-full max-w-sm">
+                    <div className="flex gap-2 text-white/40 italic">
+                      <span>[password]</span>
+                      <Typewriter 
+                        text="Enter decryption key:" 
+                        delay={30} 
+                        onComplete={() => setPromptFinished(true)}
+                      />
+                    </div>
+                    
+                    {promptFinished && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full flex flex-col gap-2"
+                      >
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setError(false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleDecrypt();
+                            }
+                          }}
+                          placeholder="••••"
+                          className="bg-transparent border-b border-pink-deep/30 focus:border-pink-deep/70 outline-none text-white/60 font-mono text-sm tracking-widest py-1 italic w-full"
+                          autoFocus
+                        />
+                        {error && (
+                          <motion.span 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-red-400 text-xs font-mono"
+                          >
+                            [error] Decryption failed. Invalid credentials.
+                          </motion.span>
+                        )}
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {promptFinished && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <button
+                        id="decrypt-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDecrypt();
+                        }}
+                        className="group flex items-center gap-3 px-6 py-3 border border-pink-deep/30 bg-pink-deep/5 hover:bg-pink-deep/10 text-pink-soft transition-all duration-300 pointer-events-auto"
+                      >
+                        <Lock size={16} className="group-hover:rotate-12 transition-transform" />
+                        <span className="font-mono tracking-widest uppercase text-xs">Decrypt Message</span>
+                        <span className="terminal-cursor" />
+                      </button>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </div>

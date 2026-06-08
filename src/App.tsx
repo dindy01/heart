@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Terminal, Lock, Heart as HeartIcon, Sparkles } from 'lucide-react';
 import TextHeart from './components/TextHeart';
 // @ts-ignore
-import angelAudio from './assets/angel.mp3';
+import angelAudio from './assets/Angel_final.mp3';
 
 const Typewriter = ({ text, delay = 50, onComplete }: { text: string, delay?: number, onComplete?: () => void }) => {
   const [currentText, setCurrentText] = useState("");

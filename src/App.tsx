@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Terminal, Lock, Heart as HeartIcon, Sparkles } from 'lucide-react';
 import TextHeart from './components/TextHeart';
+// @ts-ignore
+import angelAudio from './assets/angel.mp3';
 
 const Typewriter = ({ text, delay = 50, onComplete }: { text: string, delay?: number, onComplete?: () => void }) => {
   const [currentText, setCurrentText] = useState("");
@@ -25,6 +27,22 @@ const Typewriter = ({ text, delay = 50, onComplete }: { text: string, delay?: nu
 export default function App() {
   const [stage, setStage] = useState<'console' | 'reveal'>('console');
   const [consoleFinished, setConsoleFinished] = useState(false);
+
+  useEffect(() => {
+    let audio: HTMLAudioElement | null = null;
+    if (stage === 'reveal') {
+      audio = new Audio(angelAudio);
+      audio.loop = true;
+      audio.volume = 0.8;
+      audio.play().catch(err => console.log("Audio play blocked/failed:", err));
+    }
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio = null;
+      }
+    };
+  }, [stage]);
 
   const handleReveal = useCallback(() => {
     if (stage === 'console' && consoleFinished) {
@@ -110,27 +128,7 @@ export default function App() {
           >
             <TextHeart />
             
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 3, duration: 1.5 }}
-              className="z-20 text-center"
-            >
-              <h2 className="text-pink-deep font-mono text-xl tracking-[0.3em] uppercase glow-text mb-2">
-                Decrypted
-              </h2>
-              <div className="w-12 h-px bg-pink-deep/30 mx-auto mb-8" />
-              
-              <motion.button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setStage('console');
-                }}
-                className="text-white/20 hover:text-white/60 transition-colors uppercase text-[10px] tracking-widest font-mono"
-              >
-                Re-encrypt
-              </motion.button>
-            </motion.div>
+
 
             {/* Subtle tech overlays */}
             <div className="absolute top-8 left-8 text-[10px] font-mono text-white/10 uppercase tracking-widest space-y-1">

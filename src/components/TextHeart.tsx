@@ -21,6 +21,7 @@ export default function TextHeart() {
     let points: Point[] = [];
     const text = "i love you";
     const fontSize = 14;
+    let glowAngle = 0;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -76,6 +77,14 @@ export default function TextHeart() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = `${fontSize}px "Fira Code", monospace`;
       
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const scale = Math.min(canvas.width, canvas.height) / 45;
+
+      // Draw the glowing text heart
+      ctx.shadowColor = 'rgba(255, 77, 109, 0.8)';
+      ctx.shadowBlur = 10;
+
       points.forEach(p => {
         if (elapsed > p.delay) {
             p.alpha += (p.targetAlpha - p.alpha) * 0.02;
@@ -84,6 +93,41 @@ export default function TextHeart() {
         ctx.fillStyle = `rgba(255, 77, 109, ${p.alpha})`;
         ctx.fillText(text, p.x - ctx.measureText(text).width / 2, p.y);
       });
+
+      // Reset shadow for the orb drawing
+      ctx.shadowBlur = 0;
+
+      // Draw traveling glowing effect around the text outline
+      if (elapsed > 1000) {
+        glowAngle += 0.012; // slow orbit speed
+        if (glowAngle > Math.PI * 2) {
+          glowAngle = 0;
+        }
+
+        // Draw traveling orb with trail (e.g. 10 particles of descending sizes/opacities)
+        for (let i = 0; i < 10; i++) {
+          const trailAngle = glowAngle - (i * 0.06);
+          const gx = 16 * Math.pow(Math.sin(trailAngle), 3);
+          const gy = -(13 * Math.cos(trailAngle) - 5 * Math.cos(2*trailAngle) - 2 * Math.cos(3*trailAngle) - Math.cos(4*trailAngle));
+          const px = centerX + gx * scale;
+          const py = centerY + gy * scale;
+
+          const trailAlpha = (1 - (i / 10)) * Math.min(1, (elapsed - 1000) / 2000);
+          const size = 35 - (i * 3);
+          if (size <= 0) continue;
+
+          const gradient = ctx.createRadialGradient(px, py, 0, px, py, size);
+          gradient.addColorStop(0, `rgba(255, 255, 255, ${trailAlpha * 0.9})`);
+          gradient.addColorStop(0.2, `rgba(255, 77, 109, ${trailAlpha * 0.7})`);
+          gradient.addColorStop(0.6, `rgba(255, 77, 109, ${trailAlpha * 0.2})`);
+          gradient.addColorStop(1, 'rgba(255, 77, 109, 0)');
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(px, py, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
 
       animationFrameId = requestAnimationFrame(draw);
     };

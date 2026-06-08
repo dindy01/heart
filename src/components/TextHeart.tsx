@@ -17,7 +17,19 @@ interface Sparkle {
   size: number;
   decay: number;
   color: string;
+  rotation: number;
+  rotationSpeed: number;
 }
+
+const drawHeartParticle = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  ctx.beginPath();
+  const topY = y - size * 0.25;
+  ctx.moveTo(x, topY);
+  ctx.bezierCurveTo(x - size, topY - size * 0.8, x - size * 1.3, y + size * 0.3, x, y + size * 0.95);
+  ctx.bezierCurveTo(x + size * 1.3, y + size * 0.3, x + size, topY - size * 0.8, x, topY);
+  ctx.closePath();
+  ctx.fill();
+};
 
 export default function TextHeart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -137,9 +149,11 @@ export default function TextHeart() {
             vx: (Math.random() - 0.5) * 0.4,
             vy: -Math.random() * 0.6 - 0.2, // slow drift upwards
             alpha: 0.8 + Math.random() * 0.2,
-            size: Math.random() * 2.2 + 0.6, // size range from 0.6 to 2.8px
+            size: Math.random() * 2.8 + 1.2, // slightly larger so shape is visible
             decay: Math.random() * 0.004 + 0.002, // slower decay for longer life
-            color: colorPrefix
+            color: colorPrefix,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.03
           });
         }
       }
@@ -149,6 +163,7 @@ export default function TextHeart() {
         s.x += s.vx;
         s.y += s.vy;
         s.alpha -= s.decay;
+        s.rotation += s.rotationSpeed;
 
         if (s.alpha <= 0) {
           return false;
@@ -157,10 +172,12 @@ export default function TextHeart() {
         // Slight horizontal swaying motion using sine
         s.vx += Math.sin(time * 0.01 + s.y) * 0.01;
 
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rotation);
         ctx.fillStyle = `${s.color}${s.alpha})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
+        drawHeartParticle(ctx, 0, 0, s.size);
+        ctx.restore();
         return true;
       });
 
